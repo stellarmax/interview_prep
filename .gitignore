@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db
+# 需求文档含个人信息，默认不发布到公开站点
+*产品需求文档.md
