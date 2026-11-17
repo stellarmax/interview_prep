@@ -58,6 +58,7 @@ function icon(name) {
     star: 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z',
     chev: 'M9 18l6-6-6-6',
     shuffle: 'M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5',
+    shield: 'M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6z',
     book: 'M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5v14zM20 17v4H6.5A2.5 2.5 0 0 1 4 18.5',
   };
   const ns = 'http://www.w3.org/2000/svg';
@@ -195,7 +196,7 @@ function viewHome() {
   const pend = pendingIds().length;
   const all = catStats('mix');
   const header = h('header', { class: 'topbar' },
-    h('div', { class: 'brand' }, h('span', { class: 'logo', text: '🛡' }), h('span', { text: '网安面试刷题' })),
+    h('div', { class: 'brand' }, h('span', { class: 'logo' }, icon('shield')), h('span', { text: '网安面试刷题' })),
     h('button', { class: 'icon-btn', 'aria-label': '设置', onclick: () => go('#/settings') }, icon('gear')));
 
   const overview = h('section', { class: 'overview' },
@@ -204,10 +205,10 @@ function viewHome() {
     h('div', { class: 'ov-item' }, h('b', { text: String(pend) }), h('span', { text: '待复习' })));
 
   const wrongEntry = h('button', { class: 'wrong-entry', onclick: () => go('#/wrong') },
-    icon('book'),
+    h('span', { class: 'entry-icon' }, icon('book')),
     h('span', { class: 'we-text' }, h('b', { text: '错题集' }), h('small', { text: pend ? '面试前重点过一遍' : '还没有错题' })),
     pend ? h('span', { class: 'badge', text: String(pend) }) : null,
-    icon('chev'));
+    h('span', { class: 'chev' }, icon('chev')));
 
   const cards = bank.categories.map((c) => {
     const st = catStats(c.id);
@@ -223,7 +224,7 @@ function viewHome() {
   });
 
   const mix = h('button', { class: 'mix-card', onclick: () => openPracticeSheet('mix') },
-    icon('shuffle'), h('span', { class: 'we-text' }, h('b', { text: '随机混合' }), h('small', { text: `四个分类共 ${total} 题` })), icon('chev'));
+    h('span', { class: 'entry-icon' }, icon('shuffle')), h('span', { class: 'we-text' }, h('b', { text: '随机混合' }), h('small', { text: `四个分类共 ${total} 题` })), h('span', { class: 'chev' }, icon('chev')));
 
   return [header, h('main', { class: 'page' }, overview, wrongEntry, h('h2', { class: 'section-title', text: '分类练习' }), h('div', { class: 'cat-grid' }, cards), mix,
     h('p', { class: 'foot muted', text: `题库更新于 ${bank.updatedAt} · 进度仅保存在本浏览器` }))];
@@ -243,7 +244,7 @@ function viewQuiz() {
   const header = h('header', { class: 'topbar quizbar' },
     h('button', { class: 'icon-btn', 'aria-label': '返回', onclick: () => go('#/home') }, icon('back')),
     h('div', { class: 'qprog' }, h('span', { text: `${session.index + 1} / ${n}` }), bar),
-    h('span', { class: 'score', 'aria-label': '本轮答对', text: `✓ ${session.correctCount}` }));
+    h('span', { class: 'score', 'aria-label': '本轮答对', text: `答对 ${session.correctCount}` }));
 
   const starred = store.isPending(q.id);
   const starBtn = h('button', {
@@ -275,8 +276,8 @@ function viewQuiz() {
   if (answered) {
     const correctLetter = LETTERS[it.order.indexOf(q.answer)];
     exp = h('section', { class: 'explain ' + (it.correct ? 'ok' : 'bad'), 'aria-live': 'polite' },
-      h('div', { class: 'exp-head', text: it.correct ? '✓ 回答正确' : `✗ 回答错误，正确答案是 ${correctLetter}` }),
-      it.mastered ? h('div', { class: 'exp-note', text: `🎉 已连续答对 ${store.settings().masterThreshold} 次，移出错题集` }) : null,
+      h('div', { class: 'exp-head', text: it.correct ? '回答正确' : `回答错误，正确答案是 ${correctLetter}` }),
+      it.mastered ? h('div', { class: 'exp-note', text: `已连续答对 ${store.settings().masterThreshold} 次，移出错题集` }) : null,
       h('p', {}, rich(q.explanation)),
       h('div', { class: 'tags' }, h('span', { class: 'tag', text: q.topic }), (q.tags || []).map((t) => h('span', { class: 'tag tag-hl', text: t }))));
   }
@@ -350,7 +351,7 @@ function viewResult() {
   let wrongInfo = null;
   if (r.meta.kind === 'wrong' || r.meta.kind === 'retry') {
     wrongInfo = h('div', { class: 'notice ok' },
-      r.pendingAfter === 0 ? '🎉 错题集已清空，全部掌握！' : `本轮移出 ${masteredNow} 题，错题集还剩 ${r.pendingAfter} 题`);
+      r.pendingAfter === 0 ? '错题集已清空，全部掌握' : `本轮移出 ${masteredNow} 题，错题集还剩 ${r.pendingAfter} 题`);
   }
 
   const list = wrongs.length
@@ -436,13 +437,13 @@ function viewWrong() {
   const topicErr = new Map();
   for (const q of inBook) topicErr.set(q.topic, (topicErr.get(q.topic) || 0) + (wb[q.id].wrongCount || 0));
   const top3 = [...topicErr.entries()].filter(([, c]) => c > 0).sort((a, b) => b[1] - a[1]).slice(0, 3);
-  const weak = top3.length ? h('section', { class: 'weak' }, h('div', { class: 'weak-title', text: '🎯 错得最多的知识点' }),
+  const weak = top3.length ? h('section', { class: 'weak' }, h('div', { class: 'weak-title', text: '错得最多的知识点' }),
     h('ol', {}, top3.map(([t, c]) => h('li', {}, h('span', { text: t }), h('em', { text: `错 ${c} 次` }))))) : null;
 
   let content;
   if (!sorted.length) {
     const emptyText = wrongUI.tab === 'pending'
-      ? (pend.length ? '这个分类下没有待复习的题' : (mast.length ? '🎉 错题都已掌握' : '还没有错题，去刷几道试试'))
+      ? (pend.length ? '这个分类下没有待复习的题' : (mast.length ? '错题都已掌握' : '还没有错题，去刷几道试试'))
       : '还没有已掌握的错题';
     content = h('div', { class: 'empty' }, h('div', { class: 'empty-emoji', text: wrongUI.tab === 'pending' && !pend.length ? '📭' : '🗂' }),
       h('p', { text: emptyText }),
